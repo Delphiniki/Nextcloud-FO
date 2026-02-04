@@ -1,0 +1,81 @@
+services:
+# HAProxy to load balance the external Galera cluster
+  haproxy:
+    image: haproxy:latest
+    container_name: haproxy
+    restart: unless-stopped
+    ports:
+      - 7000:7000
+      - 3307:3307
+    volumes:
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+# Redis for memory caching
+  redis:
+    image: redis:alpine
+    container_name: redis
+    restart: unless-stopped
+    ports:
+      - 6379:6379
+# Nextcloud Application
+  nextcloud:
+    image: nextcloud:latest
+    container_name: nextcloud
+    restart: unless-stopped
+    ports:
+      - "8080:80" # Maps local port 8080 to the container for Public IP access
+    environment:
+      - TZ=Europe/Sofia
+      - MYSQL_HOST=haproxy:3307 # HAProxy is on the same network stack via tailscale service
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=nextcloud
+      - MYSQL_PASSWORD=nextcloud  # Use strong password in production
+      - REDIS_HOST=redis
+      - NEXTCLOUD_TRUSTED_DOMAINS=<Public_IP_Address>
+    volumes:
+      - ./nextcloud_data:/var/www/html/data
+      - ./config:/var/www/html/config
+    depends_on:
+    - haproxy
+    - redis
+  syncthing:
+    image: lscr.io/linuxserver/syncthing:latest
+    container_name: syncthing
+    environment:
+      - PUID=33 # Match Nextcloud's user ID (usually 33)
+      - PGID=33  # Match Nextcloud's group ID (usually 0 or 33)
+      - TZ=Europe/Sofia
+    volumes:
+      - ./syncthing_config:/config
+      - ./nextcloud_data:/data1  # folder "/data1" would be shared in web ui ,between all nodes
+    ports:
+      - 8384:8384 # Web UI
+      - 22000:22000/tcp
+      - 22000:22000/udp
+    restart: unless-stopped
+  mariadb:
+    image: mariadb:latest # Regular MariaDB image
+    container_name: mariadb
+# Next command only on first start for bootstrap:
+#    command: --wsrep-new-cluster
+    environment:
+      - MARIADB_ROOT_PASSWORD=root_password   # Use strong password in production
+      - MARIADB_GALERA_NODE_ADDRESS=100.xxx.xxx.xxx # Replace with the Tailscale IP of this node
+      - TZ=Europe/Sofia
+#      - MARIADB_GALERA_CLUSTER_BOOTSTRAP=yes
+    volumes:
+      - ./mysql-data:/var/lib/mysql
+      - ./galera.cnf:/etc/mysql/conf.d/galera.cnf:ro # Custom config
+    restart: unless-stopped
+    network_mode: host
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    restart: always
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certs:/etc/nginx/certs:ro
+    depends_on:
+      - nextcloud
