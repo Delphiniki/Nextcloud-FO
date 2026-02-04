@@ -18,3 +18,4 @@ wsrep_node_address="node1_tailscale_ip" # This node's Tailscale IP
 wsrep_node_name="db-node-1"
 wsrep_sst_method=rsync
 wsrep_sst_receive_address="node1_tailscale_ip"
+
