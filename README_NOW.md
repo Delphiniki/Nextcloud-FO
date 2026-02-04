@@ -1,4 +1,5 @@
 # Key considerations:
+- I use Ubuntu 24.04 servers and Tailscale (for fast connection between galera cluster nodes and haproxy)
 - Assume that we have 3 servers ,one primary and two backup.Let's say
   node1 is primary and node2 ,node3 - backup serversI am using Tailscale and every server is in same tailnet.
 ```
