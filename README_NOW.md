@@ -37,7 +37,7 @@ chmod -R 755 config nextcloud_data
 * * * * *       /bin/bash       /opt/scripts/failover.sh
 ```
 
-Create database manually before starting the nextcloud service:
+Create database manually before starting the nextcloud service.Create it only on one of nodes:
 ```bash
 mysql -h127.0.0.1 -uroot -p   ### use root password set in docker compose file. 
 
