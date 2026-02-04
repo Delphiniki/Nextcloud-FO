@@ -13,9 +13,9 @@ RECORD_ID=""
 RECORD_NAME="app.example.com"
 HOSTNAME=$(hostname)
 
-PRIMARY_IP="188.xxx.xxx.xxx"
-BACKUP1_IP="188.yyy.yyy.yyy"
-BACKUP2_IP="159.zzz.zzz.zzz"
+PRIMARY_IP="node1_public_ip"
+BACKUP1_IP="node1_public_ip"
+BACKUP2_IP="node1_public_ip"
 
 # Notification Config (Fill one or both)
 TELEGRAM_TOKEN=""
